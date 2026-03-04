@@ -1,13 +1,15 @@
 import { Transform } from 'class-transformer';
-import { IsString, MinLength } from 'class-validator';
+import { IsString, MaxLength, MinLength } from 'class-validator';
 
 export class ResetPasswordDto {
     @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
     @IsString()
     @MinLength(1)
+    @MaxLength(256)
     token: string;
 
     @IsString()
     @MinLength(6)
+    @MaxLength(128)
     newPassword: string;
 }

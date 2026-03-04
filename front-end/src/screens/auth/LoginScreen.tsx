@@ -6,6 +6,8 @@ import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { RootScreenProps } from '../../types/navigation';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
     const { login, loginWithGoogle, loginWithFacebook, loginWithApple } = useAuth();
     const [email, setEmail] = useState('');
@@ -19,9 +21,15 @@ export default function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
             Alert.alert('Error', 'Please fill in all fields');
             return;
         }
+
+        if (!EMAIL_REGEX.test(email.trim())) {
+            Alert.alert('Error', 'Please enter a valid email address');
+            return;
+        }
+
         try {
             setLoading(true);
-            await login(email, password);
+            await login(email.trim().toLowerCase(), password);
         } catch (error: any) {
             const msg = error.response?.data?.message || 'Login failed';
             Alert.alert('Error', Array.isArray(msg) ? msg[0] : msg);

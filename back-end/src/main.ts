@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import * as dns from 'dns';
 import cookieParser from 'cookie-parser';
@@ -14,6 +14,21 @@ async function bootstrap() {
     whitelist: true,
     forbidNonWhitelisted: true,
     transform: true,
+    exceptionFactory: (errors) => {
+      const details = errors.flatMap((error) => {
+        const constraints = error.constraints ? Object.values(error.constraints) : [];
+        return constraints.map((message) => ({
+          field: error.property,
+          message,
+        }));
+      });
+
+      return new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: 'Validation failed',
+        details,
+      });
+    },
   }));
 
   // Enable cookie parsing - REQUIRED for OAuth redirect URI handling

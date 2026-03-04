@@ -39,7 +39,10 @@ export class AuthController {
         const user = await this.authService.validateUser(body.email, body.password);
         if (!user) {
             console.log('❌ [AUTH] POST /auth/login - Invalid credentials');
-            throw new UnauthorizedException('Invalid credentials');
+            throw new UnauthorizedException({
+                code: 'AUTH_INVALID_CREDENTIALS',
+                message: 'Invalid credentials',
+            });
         }
         const result = await this.authService.login(user);
         console.log('✅ [AUTH] POST /auth/login - Success:', { userId: user._id, email: user.email });

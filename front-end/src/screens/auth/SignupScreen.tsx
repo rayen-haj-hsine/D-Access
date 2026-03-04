@@ -11,6 +11,9 @@ import { EyeIcon } from '../../components/icons/EyeIcon';
 import { CaretDownIcon } from '../../components/icons/CaretDownIcon';
 import { RootScreenProps } from '../../types/navigation';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^[0-9\s()+-]+$/;
+
 /* ---------- COUNTRY LIST ---------- */
 const COUNTRY_CODES = [
   { code: '+216', country: 'Tunisia' },
@@ -35,8 +38,20 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async () => {
-    if (!firstName || !lastName || !email || !password) {
+    if (!firstName || !lastName || !phone || !email || !password) {
       Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(email.trim())) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
+    const phoneValue = phone.trim();
+    const phoneDigits = phoneValue.replace(/\D/g, '');
+    if (!PHONE_REGEX.test(phoneValue) || phoneDigits.length < 6 || phoneDigits.length > 15) {
+      Alert.alert('Error', 'Please enter a valid phone number');
       return;
     }
 
@@ -48,7 +63,7 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
     try {
       setLoading(true);
 
-      await register(email, password, firstName, lastName);
+      await register(email.trim().toLowerCase(), password, firstName, lastName);
 
     } catch (error: any) {
       const message =

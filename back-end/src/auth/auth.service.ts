@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { MailService } from './mail.service';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -38,12 +39,15 @@ export class AuthService {
         };
     }
 
-    async register(registerDto: any) {
+    async register(registerDto: RegisterDto) {
         console.log('  → [AuthService] register() - Starting for:', registerDto.email);
         const existingUser = await this.usersService.findOneByEmail(registerDto.email);
         if (existingUser) {
             console.log('  ❌ [AuthService] register() - User already exists');
-            throw new ConflictException('User already exists');
+            throw new ConflictException({
+                code: 'AUTH_EMAIL_ALREADY_IN_USE',
+                message: 'Email already in use',
+            });
         }
         console.log('  → [AuthService] register() - Hashing password...');
         const salt = await bcrypt.genSalt();
@@ -99,7 +103,7 @@ export class AuthService {
         const user = await this.usersService.findOneByEmail(email);
         if (!user) {
             // Don't reveal whether the email exists
-            return { message: 'If that email exists, a reset code has been sent.' };
+            return { message: 'If the account exists, a password reset code has been sent.' };
         }
 
         const token  = crypto.randomBytes(16).toString('hex'); // 32-char hex token
@@ -109,14 +113,17 @@ export class AuthService {
 
         await this.mailService.sendPasswordReset(email, token);
 
-        return { message: 'Reset code sent to your email.' };
+        return { message: 'If the account exists, a password reset code has been sent.' };
     }
 
     async resetPassword(token: string, newPassword: string) {
         const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
         const user = await this.usersService.findByResetToken(tokenHash);
         if (!user) {
-            throw new BadRequestException('Invalid or expired reset token.');
+            throw new BadRequestException({
+                code: 'AUTH_INVALID_OR_EXPIRED_RESET_TOKEN',
+                message: 'Invalid or expired reset token',
+            });
         }
 
         const salt = await bcrypt.genSalt();

@@ -46,8 +46,8 @@ export const authApi = {
 
 export const placesApi = {
     getAll: () => api.get('/places'),
-    findNearby: (lat: number, lon: number, distance: number = 5000) =>
-        api.get(`/places/nearby?lat=${lat}&lon=${lon}&distance=${distance}`),
+    findNearby: (lat: number, lon: number, radius: number = 5000, page: number = 1, limit: number = 20) =>
+        api.get(`/places/nearby?lat=${lat}&lon=${lon}&radius=${radius}&page=${page}&limit=${limit}`),
 };
 
 export const productsApi = {

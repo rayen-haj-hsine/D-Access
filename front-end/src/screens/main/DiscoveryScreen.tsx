@@ -28,7 +28,7 @@ export default function DiscoveryScreen() {
         try {
             setLoading(true);
             const response = await placesApi.findNearby(lat, lon);
-            setPlaces(response.data);
+            setPlaces(response.data?.data ?? []);
         } catch (error) {
             console.error(error);
             // Fallback for demo if backend not running/reachable

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -9,12 +9,19 @@ import {
     StyleSheet,
     StatusBar,
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, UrlTile } from 'react-native-maps';
+import * as Location from 'expo-location';
 import { colors } from '../../constants/colors';
 import { BackIcon } from '../../components/icons/BackIcon';
 import { MapScreenProps } from '../../types/navigation';
 
 const FILTER_CHIPS = ['All', 'Entrance', 'Toilet', 'Elevator', 'Parking'];
+const FALLBACK_REGION = {
+    latitude: 36.7538,
+    longitude: 3.0588,
+    latitudeDelta: 0.02,
+    longitudeDelta: 0.02,
+};
 
 const MOCK_NEARBY_PLACES = [
     {
@@ -67,6 +74,40 @@ const MOCK_REPORTS = [
 
 export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
     const [activeFilter, setActiveFilter] = useState('All');
+    const [mapRegion, setMapRegion] = useState(FALLBACK_REGION);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const resolveUserLocation = async () => {
+            try {
+                const { status } = await Location.requestForegroundPermissionsAsync();
+
+                if (status !== 'granted') {
+                    return;
+                }
+
+                const currentPosition = await Location.getCurrentPositionAsync({});
+                if (!isMounted) {
+                    return;
+                }
+
+                setMapRegion({
+                    latitude: currentPosition.coords.latitude,
+                    longitude: currentPosition.coords.longitude,
+                    latitudeDelta: 0.02,
+                    longitudeDelta: 0.02,
+                });
+            } catch {
+            }
+        };
+
+        resolveUserLocation();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     return (
         <View style={styles.container}>
@@ -76,15 +117,17 @@ export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
             <View style={styles.mapContainer}>
                 <MapView
                     style={styles.map}
-                    initialRegion={{
-                        latitude: 36.7538,
-                        longitude: 3.0588,
-                        latitudeDelta: 0.02,
-                        longitudeDelta: 0.02,
-                    }}
+                    region={mapRegion}
+                    onRegionChangeComplete={setMapRegion}
                     showsUserLocation
                     showsMyLocationButton={false}
+                    mapType="none"
                 >
+                    <UrlTile
+                        urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        maximumZ={19}
+                        flipY={false}
+                    />
                     <Marker
                         coordinate={{ latitude: 36.7538, longitude: 3.0588 }}
                         title="Coffee VI"
@@ -114,6 +157,10 @@ export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
                 >
                     <Text style={styles.reportBtnText}>+ Report</Text>
                 </TouchableOpacity>
+
+                <View style={styles.attributionWrap}>
+                    <Text style={styles.attributionText}>© OpenStreetMap contributors</Text>
+                </View>
             </View>
 
             {/* Drag handle */}
@@ -310,6 +357,20 @@ const styles = StyleSheet.create({
         color: colors.white,
         fontWeight: '600',
         fontSize: 13,
+    },
+    attributionWrap: {
+        position: 'absolute',
+        left: 12,
+        bottom: 10,
+        backgroundColor: 'rgba(255,255,255,0.92)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    attributionText: {
+        color: colors.gray700,
+        fontSize: 10,
+        fontWeight: '500',
     },
     // Handle
     handleRow: {

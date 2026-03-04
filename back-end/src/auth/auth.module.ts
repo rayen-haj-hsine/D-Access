@@ -20,7 +20,9 @@ import { MailService } from './mail.service';
       useFactory: async (configService: ConfigService) => {
         const secret = configService.get<string>('JWT_SECRET');
         if (!secret) {
-          throw new Error('JWT_SECRET is not set. Please configure it in back-end/.env.');
+          throw new Error(
+            'JWT_SECRET is not set. Please configure it in back-end/.env.',
+          );
         }
 
         return {
@@ -42,5 +44,4 @@ import { MailService } from './mail.service';
   ],
   exports: [AuthService],
 })
-export class AuthModule { }
-
+export class AuthModule {}

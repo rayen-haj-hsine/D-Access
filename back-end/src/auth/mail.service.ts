@@ -3,30 +3,30 @@ import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailService {
-    private readonly logger = new Logger(MailService.name);
-    private transporter: nodemailer.Transporter;
+  private readonly logger = new Logger(MailService.name);
+  private transporter: nodemailer.Transporter;
 
-    constructor() {
-        this.transporter = nodemailer.createTransport({
-            host:   process.env.MAIL_HOST   ?? 'smtp.gmail.com',
-            port:   Number(process.env.MAIL_PORT ?? 587),
-            secure: process.env.MAIL_SECURE === 'true',
-            auth: {
-                user: process.env.MAIL_USER,
-                pass: process.env.MAIL_PASS,
-            },
-        });
-    }
+  constructor() {
+    this.transporter = nodemailer.createTransport({
+      host: process.env.MAIL_HOST ?? 'smtp.gmail.com',
+      port: Number(process.env.MAIL_PORT ?? 587),
+      secure: process.env.MAIL_SECURE === 'true',
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+    });
+  }
 
-    async sendPasswordReset(to: string, token: string): Promise<void> {
-        const appName = 'D-Access';
-        try {
-            await this.transporter.sendMail({
-                from:    `"${appName}" <${process.env.MAIL_USER}>`,
-                to,
-                subject: `${appName} — Password Reset Code`,
-                text:    `Your password reset code is: ${token}\n\nThis code expires in 15 minutes.\nIf you did not request this, ignore this email.`,
-                html:    `
+  async sendPasswordReset(to: string, token: string): Promise<void> {
+    const appName = 'D-Access';
+    try {
+      await this.transporter.sendMail({
+        from: `"${appName}" <${process.env.MAIL_USER}>`,
+        to,
+        subject: `${appName} — Password Reset Code`,
+        text: `Your password reset code is: ${token}\n\nThis code expires in 15 minutes.\nIf you did not request this, ignore this email.`,
+        html: `
                     <div style="font-family:sans-serif;max-width:480px;margin:auto;">
                         <h2 style="color:#06b6d4;">${appName}</h2>
                         <p>You requested a password reset. Use the code below:</p>
@@ -39,11 +39,11 @@ export class MailService {
                         </p>
                     </div>
                 `,
-            });
-            this.logger.log(`Reset email sent to ${to}`);
-        } catch (err) {
-            this.logger.error(`Failed to send reset email to ${to}`, err);
-            throw err;
-        }
+      });
+      this.logger.log(`Reset email sent to ${to}`);
+    } catch (err) {
+      this.logger.error(`Failed to send reset email to ${to}`, err);
+      throw err;
     }
+  }
 }

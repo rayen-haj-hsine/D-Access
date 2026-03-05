@@ -1,27 +1,26 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, StatusBar, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '../../constants/colors';
 import { RootScreenProps } from '../../types/navigation';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const HORIZONTAL_MARGIN = 35;
+const CONTENT_WIDTH = Math.min(320, SCREEN_WIDTH - HORIZONTAL_MARGIN * 2);
+const ILLUSTRATION_WIDTH = Math.min(SCREEN_WIDTH * 1.09, 437);
+const ILLUSTRATION_HEIGHT = ILLUSTRATION_WIDTH * 0.96;
 
 export default function WelcomeScreen({ navigation }: RootScreenProps<'Welcome'>) {
   return (
     <LinearGradient
-      colors={[colors.cyan500, colors.blue500]}
+      colors={['#0FA3E2', '#49C9FF']}
+      locations={[0.629, 1]}
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea}>
         <StatusBar barStyle="light-content" />
 
-
-
-        {/* Main Content */}
         <View style={styles.mainContent}>
-          {/* Top circular element */}
-          <View style={styles.circleElement} />
-
-          {/* Illustration */}
           <View style={styles.illustrationContainer}>
             <Image
               source={require('../../../assets/welcome-icon.png')}
@@ -30,18 +29,28 @@ export default function WelcomeScreen({ navigation }: RootScreenProps<'Welcome'>
             />
           </View>
 
-          {/* Text Content */}
-          <View style={styles.textContent}>
+          <LinearGradient
+            colors={[
+              'rgba(14, 163, 226, 0.08)',
+              'rgba(14, 163, 226, 0.8)',
+              'rgba(51, 138, 174, 0.8)',
+              'rgba(115, 115, 115, 0)',
+            ]}
+            locations={[0.058, 0.42, 0.611, 1]}
+            style={styles.bottomGlow}
+            pointerEvents="none"
+          />
+
+          <View style={[styles.textContent, { width: CONTENT_WIDTH }]}>
             <Text style={styles.heading}>
-              Navigate your world with confidence
+              Navigate your world{"\n"}with confidence
             </Text>
             <Text style={styles.subtext}>
               Find accessible places, shop for mobility aids, and get expert health advice all in one place
             </Text>
           </View>
 
-          {/* Buttons */}
-          <View style={styles.buttonsContainer}>
+          <View style={[styles.buttonsContainer, { width: CONTENT_WIDTH }]}>
             <TouchableOpacity
               style={styles.primaryButton}
               onPress={() => navigation.navigate('Signup')}
@@ -72,87 +81,80 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-    justifyContent: 'space-between',
+    paddingTop: 10,
+    paddingBottom: 28,
     alignItems: 'center',
-  },
-  circleElement: {
-    width: 64,
-    height: 64,
-    backgroundColor: colors.gray300,
-    borderRadius: 32,
-    marginBottom: 32,
-    alignSelf: 'flex-start',
-    opacity: 0.8,
   },
   illustrationContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    width: ILLUSTRATION_WIDTH,
+    height: ILLUSTRATION_HEIGHT,
+    marginTop: 18,
+    marginBottom: 16,
     alignItems: 'center',
-    marginBottom: 32,
+    justifyContent: 'center',
   },
   illustration: {
-    width: 256,
-    height: 256,
+    width: ILLUSTRATION_WIDTH,
+    height: ILLUSTRATION_HEIGHT,
+    transform: [{ rotate: '-1.74deg' }],
+  },
+  bottomGlow: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 584,
   },
   textContent: {
-    width: '100%',
-    marginBottom: 32,
-    alignItems: 'center',
+    marginTop: 'auto',
+    marginBottom: 28,
+    alignItems: 'flex-start',
   },
   heading: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: colors.white,
-    marginBottom: 16,
-    textAlign: 'center',
-    lineHeight: 42,
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 14,
+    textAlign: 'left',
+    lineHeight: 34,
   },
   subtext: {
-    color: colors.white,
+    color: '#FFFFFF',
     fontSize: 14,
-    lineHeight: 22,
-    opacity: 0.9,
-    textAlign: 'center',
+    lineHeight: 20,
+    opacity: 0.98,
+    fontWeight: '500',
+    textAlign: 'left',
   },
   buttonsContainer: {
-    width: '100%',
+    marginBottom: 6,
     gap: 12,
   },
   primaryButton: {
     width: '100%',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    backgroundColor: colors.cyan200,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    height: 48,
+    backgroundColor: '#4AAFD9',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   primaryButtonText: {
-    color: colors.sky700,
-    fontWeight: 'bold',
+    color: '#F4F3F5',
+    fontWeight: '500',
     fontSize: 16,
     textAlign: 'center',
   },
   secondaryButton: {
     width: '100%',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    backgroundColor: colors.white,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    height: 48,
+    backgroundColor: '#E6F8FF',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   secondaryButtonText: {
-    color: colors.cyan500,
-    fontWeight: 'bold',
+    color: '#4AAFD9',
+    fontWeight: '500',
     fontSize: 16,
     textAlign: 'center',
   },

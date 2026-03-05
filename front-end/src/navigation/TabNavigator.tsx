@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as Location from 'expo-location';
 import HomeScreen from '../screens/main/HomeScreen';
 import MapScreen from '../screens/main/MapScreen';
 import MarketScreen from '../screens/main/MarketScreen';
@@ -24,6 +25,8 @@ import { MapIcon } from '../components/icons/Mapicon';
 import { HomeIcon } from '../components/icons/Homeicon';
 import { SvgProps } from 'react-native-svg/lib/typescript/elements/Svg';
 import { HomeStackParamList, MapStackParamList, SettingsStackParamList, TabParamList } from '../types/navigation';
+import { useAuth } from '../context/AuthContext';
+import { AuthStatusPopup } from '../components/common/AuthStatusPopup';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
@@ -100,38 +103,103 @@ function SettingsStackScreen() {
 }
 
 export default function TabNavigator() {
+    const { lastAuthAction, clearLastAuthAction } = useAuth();
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [showLocationPopup, setShowLocationPopup] = useState(false);
+
+    useEffect(() => {
+        if (!lastAuthAction) return;
+        setShowSuccessPopup(true);
+    }, [lastAuthAction]);
+
+    const successContent = useMemo(() => {
+        if (lastAuthAction === 'register') {
+            return {
+                title: 'Welcome to D-WEE',
+                message: 'Your account is ready. Let\'s help you navigate the city with confidence and ease.',
+                primaryLabel: 'Let\'s Start',
+            };
+        }
+
+        return {
+            title: 'Successful Login',
+            message: 'Welcome back! Your saved "Favorites" and accessibility settings are loaded.',
+            primaryLabel: 'Go to Dashboard',
+        };
+    }, [lastAuthAction]);
+
+    const openLocationPopup = () => {
+        setShowSuccessPopup(false);
+        setShowLocationPopup(true);
+    };
+
+    const closeFlow = () => {
+        setShowLocationPopup(false);
+        clearLastAuthAction();
+    };
+
+    const handleAllowLocation = async () => {
+        try {
+            await Location.requestForegroundPermissionsAsync();
+        } finally {
+            closeFlow();
+        }
+    };
+
     return (
-        <Tab.Navigator
-            screenOptions={({ route }) => ({
-                tabBarIcon: ({ focused }) => <TabIcon focused={focused} name={route.name} />,
-                tabBarActiveTintColor: colors.primary,
-                tabBarInactiveTintColor: colors.gray500,
-                headerShown: false,
-                tabBarStyle: styles.tabBar,
-                tabBarLabelStyle: styles.tabBarLabel,
-            })}
-        >
-            <Tab.Screen
-                name="Home"
-                component={HomeStackScreen}
-                options={{ title: 'Home' }}
+        <>
+            <Tab.Navigator
+                screenOptions={({ route }) => ({
+                    tabBarIcon: ({ focused }) => <TabIcon focused={focused} name={route.name} />,
+                    tabBarActiveTintColor: colors.primary,
+                    tabBarInactiveTintColor: colors.gray500,
+                    headerShown: false,
+                    tabBarStyle: styles.tabBar,
+                    tabBarLabelStyle: styles.tabBarLabel,
+                })}
+            >
+                <Tab.Screen
+                    name="Home"
+                    component={HomeStackScreen}
+                    options={{ title: 'Home' }}
+                />
+                <Tab.Screen
+                    name="Map"
+                    component={MapStackScreen}
+                    options={{ title: 'Map' }}
+                />
+                <Tab.Screen
+                    name="Marketplace"
+                    component={MarketScreen}
+                    options={{ title: 'Market' }}
+                />
+                <Tab.Screen
+                    name="Settings"
+                    component={SettingsStackScreen}
+                    options={{ title: 'Settings' }}
+                />
+            </Tab.Navigator>
+
+            <AuthStatusPopup
+                visible={showSuccessPopup}
+                variant="verified"
+                title={successContent.title}
+                message={successContent.message}
+                primaryLabel={successContent.primaryLabel}
+                onPrimaryPress={openLocationPopup}
             />
-            <Tab.Screen
-                name="Map"
-                component={MapStackScreen}
-                options={{ title: 'Map' }}
+
+            <AuthStatusPopup
+                visible={showLocationPopup}
+                variant="location"
+                title="Enable Precise Location"
+                message="Allow maps to access your location while you use the app?"
+                primaryLabel="Allow"
+                onPrimaryPress={handleAllowLocation}
+                secondaryLabel="Skip for now"
+                onSecondaryPress={closeFlow}
             />
-            <Tab.Screen
-                name="Marketplace"
-                component={MarketScreen}
-                options={{ title: 'Market' }}
-            />
-            <Tab.Screen
-                name="Settings"
-                component={SettingsStackScreen}
-                options={{ title: 'Settings' }}
-            />
-        </Tab.Navigator>
+        </>
     );
 }
 

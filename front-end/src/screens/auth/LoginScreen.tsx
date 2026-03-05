@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from 'react-native';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    Alert,
+    ActivityIndicator,
+    StyleSheet,
+    TextInput,
+    Dimensions,
+    StatusBar,
+} from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../constants/colors';
-import { Button } from '../../components/common/Button';
-import { Input } from '../../components/common/Input';
 import { RootScreenProps } from '../../types/navigation';
+import { GoogleIcon } from '../../components/icons/Google';
+import { EyeIcon } from '../../components/icons/EyeIcon';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const FORM_WIDTH = Math.min(323, SCREEN_WIDTH - 66);
 
 export default function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
     const { login, loginWithGoogle, loginWithFacebook, loginWithApple } = useAuth();
@@ -54,43 +66,47 @@ export default function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
 
     return (
         <View style={styles.container}>
-            {/* Header */}
+            <StatusBar barStyle="dark-content" />
             <View style={styles.header}>
                 <Text style={styles.title}>Welcome to Discover</Text>
                 <Text style={styles.subtitle}>Please choose your login option below</Text>
             </View>
 
-            <View style={styles.formContainer}>
-                {/* Email Input */}
-                <Input
-                    label="Email"
-                    placeholder="Enter your email address"
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                />
-
-                {/* Password Input */}
-                <Text style={styles.label}>Password</Text>
-                <View style={styles.passwordContainer}>
-                    <Input
-                        containerStyle={{ flex: 1, marginBottom: 0 }}
-                        style={{ borderWidth: 0 }}
-                        placeholder="Enter your password"
-                        secureTextEntry={!showPassword}
-                        value={password}
-                        onChangeText={setPassword}
+            <View style={[styles.formContainer, { width: FORM_WIDTH }]}>
+                <View style={styles.fieldGroup}>
+                    <Text style={styles.label}>Email</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Enter your  email address"
+                        placeholderTextColor="rgba(0,0,0,0.6)"
+                        value={email}
+                        onChangeText={setEmail}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
                     />
-                    <TouchableOpacity
-                        style={styles.eyeIcon}
-                        onPress={() => setShowPassword(!showPassword)}
-                    >
-                        <Text style={{ color: colors.gray500 }}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
-                    </TouchableOpacity>
                 </View>
 
-                {/* Forgot Password */}
+                <View style={[styles.fieldGroup, styles.passwordGroup]}>
+                    <Text style={styles.label}>Password</Text>
+                    <View style={styles.passwordInputWrap}>
+                        <TextInput
+                            style={styles.passwordInput}
+                            placeholder="Enter your password"
+                            placeholderTextColor="rgba(0,0,0,0.6)"
+                            secureTextEntry={!showPassword}
+                            value={password}
+                            onChangeText={setPassword}
+                        />
+                        <TouchableOpacity
+                            style={styles.eyeButton}
+                            onPress={() => setShowPassword((prev) => !prev)}
+                            activeOpacity={0.8}
+                        >
+                            <EyeIcon width={19} height={19} color={colors.gray900} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
                 <TouchableOpacity
                     style={styles.forgotPassword}
                     onPress={() => navigation.navigate('ForgotPassword')}
@@ -98,60 +114,76 @@ export default function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
                     <Text style={styles.forgotPasswordText}>Forgot password?</Text>
                 </TouchableOpacity>
 
-                {/* Login Button */}
-                <Button
-                    title="Login"
+                <TouchableOpacity
                     onPress={handleLogin}
-                    loading={loading}
-                    style={[styles.loginButton, { backgroundColor: colors.cyan500 }]}
-                />
+                    disabled={loading || !!socialLoading}
+                    style={[styles.loginButton, (loading || !!socialLoading) && styles.disabled]}
+                    activeOpacity={0.88}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="#F4F3F5" />
+                    ) : (
+                        <Text style={styles.loginButtonText}>Login</Text>
+                    )}
+                </TouchableOpacity>
 
-                {/* Divider */}
                 <View style={styles.dividerContainer}>
                     <View style={styles.dividerLine} />
                     <Text style={styles.dividerText}>Or login with</Text>
                     <View style={styles.dividerLine} />
                 </View>
 
-                {/* Social Login Buttons */}
                 <View style={styles.socialContainer}>
                     <TouchableOpacity
-                        style={[styles.socialButton, { backgroundColor: colors.blue600 }]}
+                        style={styles.socialButton}
                         onPress={() => handleSocialLogin('facebook', loginWithFacebook)}
-                        disabled={!!socialLoading}
+                        disabled={loading || !!socialLoading}
                     >
-                        {socialLoading === 'facebook'
-                            ? <ActivityIndicator color={colors.white} />
-                            : <Text style={styles.socialButtonText}>f</Text>
-                        }
+                        {socialLoading === 'facebook' ? (
+                            <ActivityIndicator size="small" color={colors.gray900} />
+                        ) : (
+                            <>
+                                <View style={styles.facebookBadge}>
+                                    <Text style={styles.facebookBadgeText}>f</Text>
+                                </View>
+                                <Text style={styles.socialText}>Facebook</Text>
+                            </>
+                        )}
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.socialButton, { backgroundColor: colors.red500 }]}
+                        style={styles.socialButton}
                         onPress={() => handleSocialLogin('google', loginWithGoogle)}
-                        disabled={!!socialLoading}
+                        disabled={loading || !!socialLoading}
                     >
-                        {socialLoading === 'google'
-                            ? <ActivityIndicator color={colors.white} />
-                            : <Text style={styles.socialButtonText}>G</Text>
-                        }
+                        {socialLoading === 'google' ? (
+                            <ActivityIndicator size="small" color={colors.gray900} />
+                        ) : (
+                            <>
+                                <GoogleIcon width={18} height={18} />
+                                <Text style={styles.socialText}>Gmail</Text>
+                            </>
+                        )}
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.socialButton, { backgroundColor: 'black' }]}
+                        style={styles.socialButton}
                         onPress={() => handleSocialLogin('apple', loginWithApple)}
-                        disabled={!!socialLoading}
+                        disabled={loading || !!socialLoading}
                     >
-                        {socialLoading === 'apple'
-                            ? <ActivityIndicator color={colors.white} />
-                            : <Text style={styles.socialButtonText}></Text>
-                        }
+                        {socialLoading === 'apple' ? (
+                            <ActivityIndicator size="small" color={colors.gray900} />
+                        ) : (
+                            <>
+                                <Text style={styles.appleMark}></Text>
+                                <Text style={styles.socialText}>Apple</Text>
+                            </>
+                        )}
                     </TouchableOpacity>
                 </View>
 
-                {/* Create Account Link */}
                 <View style={styles.createAccountContainer}>
-                    <Text style={styles.createAccountText}>Don't have account yet? </Text>
+                    <Text style={styles.createAccountText}>Doesn&apos;t have account on dicover? </Text>
                     <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
                         <Text style={styles.createAccountLink}>Create Account</Text>
                     </TouchableOpacity>
@@ -165,95 +197,167 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.white,
+        alignItems: 'center',
     },
     header: {
         alignItems: 'center',
-        paddingTop: 64, // pt-16
-        paddingBottom: 32, // pb-8
+        marginTop: 154,
+        marginBottom: 46,
     },
     title: {
-        fontSize: 24, // text-2xl
-        fontWeight: 'bold', // font-bold
-        color: colors.gray800,
-        marginBottom: 8, // mb-2
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#0D0D0D',
+        marginBottom: 4,
+        lineHeight: 28,
     },
     subtitle: {
-        color: colors.gray500,
+        fontSize: 14,
+        lineHeight: 20,
+        color: 'rgba(0,0,0,0.8)',
+        fontWeight: '400',
     },
     formContainer: {
-        flex: 1,
-        paddingHorizontal: 24, // px-6
+        gap: 20,
+    },
+    fieldGroup: {
+        gap: 2,
+    },
+    passwordGroup: {
+        marginTop: 2,
     },
     label: {
-        color: colors.gray700,
-        marginBottom: 8, // mb-2
+        color: 'rgba(0,0,0,0.6)',
+        fontSize: 14,
+        lineHeight: 20,
+        fontWeight: '400',
     },
-    passwordContainer: {
-        marginBottom: 8, // mb-2
+    input: {
+        height: 52,
         borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: 8,
+        borderColor: 'rgba(0,0,0,0.1)',
+        borderRadius: 10,
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        backgroundColor: colors.white,
+        fontSize: 14,
+        color: '#000000',
+    },
+    passwordInputWrap: {
+        height: 52,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.1)',
+        borderRadius: 10,
+        paddingHorizontal: 15,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.white,
     },
-    eyeIcon: {
-        padding: 12,
+    passwordInput: {
+        flex: 1,
+        fontSize: 14,
+        color: '#000000',
+        paddingVertical: 10,
+    },
+    eyeButton: {
+        paddingLeft: 10,
+        paddingVertical: 6,
     },
     forgotPassword: {
         alignSelf: 'flex-end',
-        marginBottom: 24, // mb-6
+        marginTop: -8,
     },
     forgotPasswordText: {
-        color: colors.cyan500,
-        fontSize: 14, // text-sm
+        color: '#0061D2',
+        fontSize: 12,
+        textDecorationLine: 'underline',
     },
     loginButton: {
-        width: '100%',
-        marginBottom: 24, // mb-6
+        height: 52,
+        borderRadius: 10,
+        backgroundColor: '#4AAFD9',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    disabled: {
+        opacity: 0.65,
+    },
+    loginButtonText: {
+        color: '#F4F3F5',
+        fontSize: 16,
+        fontWeight: '500',
     },
     dividerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 24, // mb-6
     },
     dividerLine: {
         flex: 1,
         height: 1,
-        backgroundColor: colors.gray300,
+        backgroundColor: 'rgba(0,0,0,0.1)',
     },
     dividerText: {
-        marginHorizontal: 16, // mx-4
-        color: colors.gray500,
-        fontSize: 14, // text-sm
+        width: 103,
+        textAlign: 'center',
+        color: 'rgba(0,0,0,0.6)',
+        fontSize: 12,
     },
     socialContainer: {
         flexDirection: 'row',
-        justifyContent: 'center',
-        marginBottom: 24, // mb-6
-        gap: 16, // space-x-4
+        gap: 8,
+        height: 52,
     },
     socialButton: {
-        width: 64, // w-16
-        height: 64, // h-16
-        borderRadius: 8, // rounded-lg
+        flex: 1,
+        height: '100%',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.1)',
+        backgroundColor: '#FFFFFF',
+        flexDirection: 'row',
+        gap: 7,
         alignItems: 'center',
         justifyContent: 'center',
-        marginHorizontal: 8, // gap replacement for older RN
     },
-    socialButtonText: {
-        color: colors.white,
-        fontSize: 20, // text-xl
+    facebookBadge: {
+        width: 21,
+        height: 21,
+        borderRadius: 11,
+        backgroundColor: '#1877F2',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    facebookBadgeText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        lineHeight: 14,
+        fontWeight: '700',
+    },
+    appleMark: {
+        color: '#000000',
+        fontSize: 16,
+        lineHeight: 16,
+        fontWeight: '700',
+    },
+    socialText: {
+        color: '#000000',
+        fontSize: 12,
+        lineHeight: 16,
     },
     createAccountContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
+        marginTop: 38,
+        paddingHorizontal: 10,
     },
     createAccountText: {
-        color: colors.gray600,
+        color: 'rgba(0,0,0,0.6)',
+        fontSize: 10,
+        lineHeight: 14,
     },
     createAccountLink: {
-        color: colors.cyan500,
-        fontWeight: '600', // font-semibold
+        color: '#000000',
+        fontWeight: '600',
+        fontSize: 10,
+        lineHeight: 14,
     },
 });

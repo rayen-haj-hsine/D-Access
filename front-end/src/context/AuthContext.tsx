@@ -25,6 +25,8 @@ export interface AuthUser {
     profile?:  Record<string, any>;
 }
 
+export type AuthActionType = 'login' | 'register' | null;
+
 interface AuthContextValue {
     user:            AuthUser | null;
     token:           string | null;
@@ -36,6 +38,8 @@ interface AuthContextValue {
     loginWithGoogle:   () => Promise<void>;
     loginWithFacebook: () => Promise<void>;
     loginWithApple:    () => Promise<void>;
+    lastAuthAction: AuthActionType;
+    clearLastAuthAction: () => void;
 }
 
 // ── Context ──────────────────────────────────────────────────────────────────
@@ -63,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user,  setUser]  = useState<AuthUser | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [lastAuthAction, setLastAuthAction] = useState<AuthActionType>(null);
     const isHandlingDeepLinkRef = useRef(false);
     const lastHandledTokenRef = useRef<string | null>(null);
 
@@ -148,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await saveToken(access_token);
             setToken(access_token);
             setUser(u);
+            setLastAuthAction('login');
             console.log('[AuthContext] login() - Login successful, user:', u.email);
         } catch (error: any) {
             console.error('[AuthContext] login() - Error:', {
@@ -173,6 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await saveToken(access_token);
         setToken(access_token);
         setUser(u);
+        setLastAuthAction('register');
         console.log('[AuthContext] register() - Registration successful, user:', u.email);
     };
 
@@ -180,6 +187,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await clearToken();
         setToken(null);
         setUser(null);
+        setLastAuthAction(null);
+    };
+
+    const clearLastAuthAction = () => {
+        setLastAuthAction(null);
     };
 
     // ── Social login helpers ─────────────────────────────────────────────────
@@ -200,6 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (result.type === 'success' && result.url) {
                 console.log(`[AuthContext] socialLogin(${provider}) - Success! URL:`, result.url);
                 await handleDeepLink(result.url);
+                setLastAuthAction('login');
             } else if (result.type === 'cancel') {
                 console.log(`[AuthContext] socialLogin(${provider}) - User cancelled`);
             } else if (result.type === 'dismiss') {
@@ -234,6 +247,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 loginWithGoogle,
                 loginWithFacebook,
                 loginWithApple,
+                lastAuthAction,
+                clearLastAuthAction,
             }}
         >
             {children}

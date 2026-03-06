@@ -53,7 +53,7 @@ export default function WelcomeScreen({ navigation }: RootScreenProps<'Welcome'>
           <View style={[styles.buttonsContainer, { width: CONTENT_WIDTH }]}>
             <TouchableOpacity
               style={styles.primaryButton}
-              onPress={() => navigation.navigate('Signup')}
+              onPress={() => navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] })}
               activeOpacity={0.8}
             >
               <Text style={styles.primaryButtonText}>Get Started</Text>

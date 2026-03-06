@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { colors } from '../../constants/colors';
 import { BackIcon } from '../../components/icons/BackIcon';
-import { HomeScreenProps } from '../../types/navigation';
+import { PlaceDetailsScreenProps } from '../../types/navigation';
+import { openAddReportOnMap } from '../../navigation/navigationRef';
 
 const { width } = Dimensions.get('window');
 
@@ -50,8 +51,15 @@ const MOCK_REVIEWS = [
     },
 ];
 
-export default function PlaceDetailsScreen({ navigation, route }: HomeScreenProps<'PlaceDetails'>) {
+export default function PlaceDetailsScreen({ navigation, route }: PlaceDetailsScreenProps) {
     const place = route?.params?.place;
+
+    const handleReportPress = () => {
+        if (openAddReportOnMap()) {
+            return;
+        }
+        navigation.navigate('MainTabs');
+    };
 
     return (
         <View style={styles.container}>
@@ -98,7 +106,7 @@ export default function PlaceDetailsScreen({ navigation, route }: HomeScreenProp
                         <TouchableOpacity style={styles.phoneBtn}>
                             <Text style={{ fontSize: 16 }}>📞</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.reportBtnSmall}>
+                        <TouchableOpacity style={styles.reportBtnSmall} onPress={handleReportPress}>
                             <Text style={styles.reportBtnSmallText}>+ Report</Text>
                         </TouchableOpacity>
                     </View>

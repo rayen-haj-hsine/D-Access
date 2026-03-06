@@ -13,11 +13,44 @@ import {
 import { colors } from '../../constants/colors';
 import { BackIcon } from '../../components/icons/BackIcon';
 import { HomeScreenProps } from '../../types/navigation';
+import { useAuth } from '../../context/AuthContext';
+import { AuthRequiredPopup } from '../../components/common/AuthRequiredPopup';
+import { pushLoginOnRoot } from '../../navigation/navigationRef';
 
 export default function WriteReviewScreen({ navigation, route }: HomeScreenProps<'WriteReview'>) {
+    const { isAuthenticated } = useAuth();
     const [rating, setRating] = useState(0);
     const [reviewText, setReviewText] = useState('');
     const place = route?.params?.place;
+
+    const handleContinueAsGuest = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+            return;
+        }
+        navigation.navigate('MainTabs');
+    };
+
+    const handleLoginOrSignup = () => {
+        if (pushLoginOnRoot()) {
+            return;
+        }
+        navigation.navigate('Login');
+    };
+
+    if (!isAuthenticated) {
+        return (
+            <View style={[styles.container, { backgroundColor: '#E9E9E9' }]}>
+                <AuthRequiredPopup
+                    visible
+                    title="Login Required"
+                    message="You need to sign in before writing a review. It only takes a minute!"
+                    onLoginPress={handleLoginOrSignup}
+                    onContinueGuestPress={handleContinueAsGuest}
+                />
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>

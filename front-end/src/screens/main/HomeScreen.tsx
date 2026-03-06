@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { colors } from '../../constants/colors';
 import { HomeScreenProps } from '../../types/navigation';
+import { useAuth } from '../../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.7;
@@ -70,6 +71,7 @@ const MOCK_BLOGS = [
 ];
 
 export default function HomeScreen({ navigation }: HomeScreenProps<'HomeMain'>) {
+    const { isAuthenticated, user } = useAuth();
     const [activeFilter, setActiveFilter] = useState('All');
     const [activeCategory, setActiveCategory] = useState<'Places' | 'Blogs'>('Places');
 
@@ -80,15 +82,29 @@ export default function HomeScreen({ navigation }: HomeScreenProps<'HomeMain'>) 
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.headerLeft}>
-                        <View style={styles.avatar}>
-                            <Text style={styles.avatarIcon}>👤</Text>
-                        </View>
-                        <View>
-                            <Text style={styles.helloText}>Hello</Text>
-                            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                                <Text style={styles.signInText}>Sign In or Sign Up</Text>
-                            </TouchableOpacity>
-                        </View>
+                        {isAuthenticated ? (
+                            <>
+                                <View style={styles.avatar}>
+                                    <Text style={styles.avatarIcon}>👤</Text>
+                                </View>
+                                <View>
+                                    <Text style={styles.helloText}>Hello</Text>
+                                    <Text style={styles.userNameText}>{user?.firstName || 'User'}</Text>
+                                </View>
+                            </>
+                        ) : (
+                            <>
+                                <View style={styles.avatar}>
+                                    <Text style={styles.avatarIcon}>👤</Text>
+                                </View>
+                                <View>
+                                    <Text style={styles.helloText}>Welcome</Text>
+                                    <TouchableOpacity onPress={() => navigation.navigate('Login' as any)}>
+                                        <Text style={styles.signInText}>Sign In or Sign Up</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </>
+                        )}
                     </View>
                     <TouchableOpacity>
                         <Text style={{ fontSize: 22, color: colors.primary }}>♡</Text>
@@ -352,6 +368,11 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: colors.primary,
         fontWeight: '500',
+    },
+    userNameText: {
+        fontSize: 14,
+        color: colors.primary,
+        fontWeight: '700',
     },
     // Search
     searchRow: {

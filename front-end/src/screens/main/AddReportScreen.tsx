@@ -11,15 +11,34 @@ import {
 import { colors } from '../../constants/colors';
 import { BackIcon } from '../../components/icons/BackIcon';
 import { MapScreenProps } from '../../types/navigation';
+import { useAuth } from '../../context/AuthContext';
+import { AuthRequiredPopup } from '../../components/common/AuthRequiredPopup';
+import { pushLoginOnRoot } from '../../navigation/navigationRef';
 
 const CATEGORIES = ['Not accessible', 'Partially accessible', 'Accessible'];
 
 export default function AddReportScreen({ navigation }: MapScreenProps<'AddReport'>) {
+    const { isAuthenticated } = useAuth();
     const [category, setCategory] = useState('Not accessible');
     const [showDropdown, setShowDropdown] = useState(false);
     const [tags, setTags] = useState<string[]>(['Steps']);
     const [tagInput, setTagInput] = useState('');
     const [description, setDescription] = useState('');
+
+    const handleContinueAsGuest = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+            return;
+        }
+        navigation.navigate('MainTabs');
+    };
+
+    const handleLoginOrSignup = () => {
+        if (pushLoginOnRoot()) {
+            return;
+        }
+        navigation.navigate('Login');
+    };
 
     const addTag = () => {
         if (tagInput.trim()) {
@@ -31,6 +50,20 @@ export default function AddReportScreen({ navigation }: MapScreenProps<'AddRepor
     const removeTag = (index: number) => {
         setTags(tags.filter((_, i) => i !== index));
     };
+
+    if (!isAuthenticated) {
+        return (
+            <View style={[styles.container, { backgroundColor: '#E9E9E9' }]}>
+                <AuthRequiredPopup
+                    visible
+                    title="Login Required to Post"
+                    message="To ensure the safety and accuracy of our community data, you must be signed in to post a report. It only takes a minute!"
+                    onLoginPress={handleLoginOrSignup}
+                    onContinueGuestPress={handleContinueAsGuest}
+                />
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>

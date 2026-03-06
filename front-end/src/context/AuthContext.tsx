@@ -91,13 +91,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     // ── Handle deep-link callback (social OAuth) ─────────────────────────────
-    const handleDeepLink = useCallback(async (url: string) => {
+    const handleDeepLink = useCallback(async (url: string): Promise<boolean> => {
         console.log('[AuthContext] handleDeepLink() - Received URL:', url);
         
         const match = url.match(/[?&]token=([^&]+)/);
         if (!match) {
             console.log('[AuthContext] handleDeepLink() - No token found in URL');
-            return;
+            return false;
         }
         
         const jwt = decodeURIComponent(match[1]);
@@ -105,12 +105,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (isHandlingDeepLinkRef.current) {
             console.log('[AuthContext] handleDeepLink() - Already processing a deep link, skipping duplicate event');
-            return;
+            return false;
         }
 
         if (lastHandledTokenRef.current === jwt) {
             console.log('[AuthContext] handleDeepLink() - Token already handled, skipping duplicate event');
-            return;
+            try {
+                const res = await authApi.me(jwt);
+                setToken(jwt);
+                setUser(res.data);
+                return true;
+            } catch {
+                await clearToken();
+                setToken(null);
+                setUser(null);
+                lastHandledTokenRef.current = null;
+                return false;
+            }
         }
         
         try {
@@ -123,6 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(res.data);
             lastHandledTokenRef.current = jwt;
             console.log('[AuthContext] handleDeepLink() - Success! User:', res.data.email);
+            return true;
         } catch (error: any) {
             console.error('[AuthContext] handleDeepLink() - Error:', {
                 message: error.message,
@@ -130,6 +142,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 status: error.response?.status,
             });
             await clearToken();
+            setToken(null);
+            setUser(null);
+            lastHandledTokenRef.current = null;
+            return false;
         } finally {
             isHandlingDeepLinkRef.current = false;
         }
@@ -188,6 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(null);
         setUser(null);
         setLastAuthAction(null);
+        lastHandledTokenRef.current = null;
     };
 
     const clearLastAuthAction = () => {
@@ -211,8 +228,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (result.type === 'success' && result.url) {
                 console.log(`[AuthContext] socialLogin(${provider}) - Success! URL:`, result.url);
-                await handleDeepLink(result.url);
-                setLastAuthAction('login');
+                const authSucceeded = await handleDeepLink(result.url);
+                if (authSucceeded) {
+                    setLastAuthAction('login');
+                } else {
+                    throw new Error('Authentication callback could not be completed.');
+                }
             } else if (result.type === 'cancel') {
                 console.log(`[AuthContext] socialLogin(${provider}) - User cancelled`);
             } else if (result.type === 'dismiss') {

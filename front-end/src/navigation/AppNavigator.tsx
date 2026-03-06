@@ -8,6 +8,7 @@ import SignupScreen from '../screens/auth/SignupScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import TabNavigator from './TabNavigator';
+import { navigationRef } from './navigationRef';
 import { useAuth } from '../context/AuthContext';
 import { RootStackParamList } from '../types/navigation';
 
@@ -25,19 +26,17 @@ export default function AppNavigator() {
     }
 
     return (
-        <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-                {isAuthenticated ? (
-                    <Stack.Screen name="MainTabs" component={TabNavigator} />
-                ) : (
-                    <>
-                        <Stack.Screen name="Welcome" component={WelcomeScreen} />
-                        <Stack.Screen name="Login" component={LoginScreen} />
-                        <Stack.Screen name="Signup" component={SignupScreen} />
-                        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-                        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-                    </>
-                )}
+        <NavigationContainer ref={navigationRef}>
+            <Stack.Navigator
+                screenOptions={{ headerShown: false }}
+                initialRouteName={isAuthenticated ? 'MainTabs' : 'Welcome'}
+            >
+                <Stack.Screen name="Welcome" component={WelcomeScreen} />
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Signup" component={SignupScreen} />
+                <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+                <Stack.Screen name="MainTabs" component={TabNavigator} />
             </Stack.Navigator>
         </NavigationContainer>
     );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -39,7 +39,7 @@ const COUNTRY_CODES = [
 
 /* ---------- SCREEN ---------- */
 export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) {
-  const { register } = useAuth();
+  const { register, isAuthenticated } = useAuth();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
@@ -78,6 +78,7 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
       setLoading(true);
 
       await register(email.trim().toLowerCase(), password, firstName, lastName);
+      navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
 
     } catch (error: any) {
       const message =
@@ -87,6 +88,7 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
       setLoading(false);
     }
   };
+
 
   return (
     <SafeAreaView style={styles.safeArea}>

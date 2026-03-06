@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { colors } from '../../constants/colors';
 import { HomeScreenProps } from '../../types/navigation';
+import { openAddReportOnMap } from '../../navigation/navigationRef';
 
 const { width } = Dimensions.get('window');
 
@@ -29,6 +30,13 @@ const MOCK_PHOTOS = [
 ];
 
 export default function PublicPlaceDetailsScreen({ navigation }: HomeScreenProps<'PublicPlaceDetails'>) {
+    const handleReportPress = () => {
+        if (openAddReportOnMap()) {
+            return;
+        }
+        navigation.navigate('MainTabs');
+    };
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" />
@@ -67,7 +75,7 @@ export default function PublicPlaceDetailsScreen({ navigation }: HomeScreenProps
                             <Text style={styles.placeAddress}>27 Whitcomb Street, London</Text>
                             <Text style={styles.maintainer}>Maintained by the city</Text>
                         </View>
-                        <TouchableOpacity style={styles.reportBtnSmall}>
+                        <TouchableOpacity style={styles.reportBtnSmall} onPress={handleReportPress}>
                             <Text style={styles.reportBtnSmallText}>+ Report</Text>
                         </TouchableOpacity>
                     </View>

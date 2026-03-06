@@ -48,6 +48,7 @@ export type HomeStackParamList = {
 export type MapStackParamList = {
   MapMain: undefined;
   PlaceDetails: { place?: PlacePreview } | undefined;
+  WriteReview: { place?: PlacePreview } | undefined;
   AddReport: undefined;
   ReportDetails: { report?: ReportPreview } | undefined;
 };
@@ -60,6 +61,7 @@ export type SettingsStackParamList = {
   AccessibilitySettings: undefined;
   ChangePassword: undefined;
   PlaceDetails: { place?: PlacePreview } | undefined;
+  WriteReview: { place?: PlacePreview } | undefined;
 };
 
 export type RootScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<
@@ -72,17 +74,28 @@ export type HomeScreenProps<T extends keyof HomeStackParamList> = CompositeScree
   NativeStackScreenProps<RootStackParamList>
 >;
 
-export type MapScreenProps<T extends keyof MapStackParamList> = NativeStackScreenProps<
-  MapStackParamList,
-  T
+export type MapScreenProps<T extends keyof MapStackParamList> = CompositeScreenProps<
+  NativeStackScreenProps<MapStackParamList, T>,
+  NativeStackScreenProps<RootStackParamList>
 >;
 
-export type SettingsScreenProps<T extends keyof SettingsStackParamList> = NativeStackScreenProps<
-  SettingsStackParamList,
-  T
+export type SettingsScreenProps<T extends keyof SettingsStackParamList> = CompositeScreenProps<
+  NativeStackScreenProps<SettingsStackParamList, T>,
+  NativeStackScreenProps<RootStackParamList>
 >;
 
 export type TabScreenProps<T extends keyof TabParamList> = CompositeScreenProps<
   BottomTabScreenProps<TabParamList, T>,
   NativeStackScreenProps<RootStackParamList>
+>;
+
+export type PlaceDetailsScreenProps = CompositeScreenProps<
+  NativeStackScreenProps<HomeStackParamList, 'PlaceDetails'>,
+  CompositeScreenProps<
+    NativeStackScreenProps<MapStackParamList, 'PlaceDetails'>,
+    CompositeScreenProps<
+      NativeStackScreenProps<SettingsStackParamList, 'PlaceDetails'>,
+      NativeStackScreenProps<RootStackParamList>
+    >
+  >
 >;

@@ -82,6 +82,7 @@ function MapStackScreen() {
         <MapStack.Navigator screenOptions={{ headerShown: false }}>
             <MapStack.Screen name="MapMain" component={MapScreen} />
             <MapStack.Screen name="PlaceDetails" component={PlaceDetailsScreen} />
+            <MapStack.Screen name="WriteReview" component={WriteReviewScreen} />
             <MapStack.Screen name="AddReport" component={AddReportScreen} />
             <MapStack.Screen name="ReportDetails" component={ReportDetailsScreen} />
         </MapStack.Navigator>
@@ -98,6 +99,7 @@ function SettingsStackScreen() {
             <SettingsStack.Screen name="AccessibilitySettings" component={AccessibilitySettingsScreen} />
             <SettingsStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
             <SettingsStack.Screen name="PlaceDetails" component={PlaceDetailsScreen} />
+            <SettingsStack.Screen name="WriteReview" component={WriteReviewScreen} />
         </SettingsStack.Navigator>
     );
 }

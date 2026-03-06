@@ -14,10 +14,14 @@ import { colors } from '../../constants/colors';
 import { shared, RADIUS, FONT, SPACING } from '../../constants/sharedStyles';
 import { BackIcon } from '../../components/icons/BackIcon';
 import { SettingsScreenProps } from '../../types/navigation';
+import { useAuth } from '../../context/AuthContext';
+import { AuthRequiredPopup } from '../../components/common/AuthRequiredPopup';
+import { pushLoginOnRoot } from '../../navigation/navigationRef';
 
 const { width } = Dimensions.get('window');
 
 export default function EditProfileScreen({ navigation }: SettingsScreenProps<'EditProfile'>) {
+    const { isAuthenticated } = useAuth();
     const [firstName, setFirstName] = useState('John');
     const [lastName, setLastName] = useState('Doe');
     const [phone, setPhone] = useState('123 456 789');
@@ -26,6 +30,35 @@ export default function EditProfileScreen({ navigation }: SettingsScreenProps<'E
     const [city, setCity] = useState('London');
     const [state, setState] = useState('London');
     const [zipCode, setZipCode] = useState('4511');
+
+    const handleContinueAsGuest = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+            return;
+        }
+        navigation.navigate('MainTabs');
+    };
+
+    const handleLoginOrSignup = () => {
+        if (pushLoginOnRoot()) {
+            return;
+        }
+        navigation.navigate('Login');
+    };
+
+    if (!isAuthenticated) {
+        return (
+            <View style={[shared.container, { backgroundColor: '#E9E9E9' }]}>
+                <AuthRequiredPopup
+                    visible
+                    title="Login Required"
+                    message="You need to sign in before editing your profile information. It only takes a minute!"
+                    onLoginPress={handleLoginOrSignup}
+                    onContinueGuestPress={handleContinueAsGuest}
+                />
+            </View>
+        );
+    }
 
     return (
         <View style={shared.container}>

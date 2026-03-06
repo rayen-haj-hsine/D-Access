@@ -12,6 +12,9 @@ import { colors } from '../../constants/colors';
 import { shared, SPACING, RADIUS, FONT, SEMANTIC_COLORS } from '../../constants/sharedStyles';
 import { BackIcon } from '../../components/icons/BackIcon';
 import { SettingsScreenProps } from '../../types/navigation';
+import { useAuth } from '../../context/AuthContext';
+import { AuthRequiredPopup } from '../../components/common/AuthRequiredPopup';
+import { pushLoginOnRoot } from '../../navigation/navigationRef';
 
 const { width } = Dimensions.get('window');
 
@@ -27,7 +30,37 @@ const SAVED_FOR_LATER = [
 ];
 
 export default function FavoritesScreen({ navigation }: SettingsScreenProps<'Favorites'>) {
+    const { isAuthenticated } = useAuth();
     const [activeTab, setActiveTab] = useState('Places');
+
+    const handleContinueAsGuest = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+            return;
+        }
+        navigation.navigate('MainTabs');
+    };
+
+    const handleLoginOrSignup = () => {
+        if (pushLoginOnRoot()) {
+            return;
+        }
+        navigation.navigate('Login');
+    };
+
+    if (!isAuthenticated) {
+        return (
+            <View style={[shared.container, { backgroundColor: '#E9E9E9' }]}>
+                <AuthRequiredPopup
+                    visible
+                    title="Login Required"
+                    message="You need to sign in before managing your favorites. It only takes a minute!"
+                    onLoginPress={handleLoginOrSignup}
+                    onContinueGuestPress={handleContinueAsGuest}
+                />
+            </View>
+        );
+    }
 
     return (
         <View style={shared.container}>

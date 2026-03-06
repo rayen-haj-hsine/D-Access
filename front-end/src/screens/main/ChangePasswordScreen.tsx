@@ -11,14 +11,47 @@ import {
 import { colors } from '../../constants/colors';
 import { shared, RADIUS, FONT, SPACING } from '../../constants/sharedStyles';
 import { SettingsScreenProps } from '../../types/navigation';
+import { useAuth } from '../../context/AuthContext';
+import { AuthRequiredPopup } from '../../components/common/AuthRequiredPopup';
+import { pushLoginOnRoot } from '../../navigation/navigationRef';
 
 export default function ChangePasswordScreen({ navigation }: SettingsScreenProps<'ChangePassword'>) {
+    const { isAuthenticated } = useAuth();
     const [oldPassword, setOldPassword] = useState('••••••••');
     const [newPassword, setNewPassword] = useState('••••••••');
     const [confirmPassword, setConfirmPassword] = useState('••••••••');
     const [showOld, setShowOld] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+
+    const handleContinueAsGuest = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+            return;
+        }
+        navigation.navigate('MainTabs');
+    };
+
+    const handleLoginOrSignup = () => {
+        if (pushLoginOnRoot()) {
+            return;
+        }
+        navigation.navigate('Login');
+    };
+
+    if (!isAuthenticated) {
+        return (
+            <View style={[shared.container, { backgroundColor: '#E9E9E9' }]}>
+                <AuthRequiredPopup
+                    visible
+                    title="Login Required"
+                    message="You need to sign in before changing your password. It only takes a minute!"
+                    onLoginPress={handleLoginOrSignup}
+                    onContinueGuestPress={handleContinueAsGuest}
+                />
+            </View>
+        );
+    }
 
     return (
         <View style={shared.container}>

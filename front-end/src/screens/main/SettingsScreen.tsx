@@ -12,6 +12,7 @@ import { colors } from '../../constants/colors';
 import { shared, RADIUS, FONT, SPACING } from '../../constants/sharedStyles';
 import { BackIcon } from '../../components/icons/BackIcon';
 import { useAuth } from '../../context/AuthContext';
+import { resetToWelcomeOnRoot, pushLoginOnRoot } from '../../navigation/navigationRef';
 import { SettingsScreenProps } from '../../types/navigation';
 
 const SETTINGS_ITEMS = [
@@ -24,11 +25,14 @@ const SETTINGS_ITEMS = [
 ];
 
 export default function SettingsScreen({ navigation }: SettingsScreenProps<'SettingsMain'>) {
-    const { logout } = useAuth();
+    const { logout, isAuthenticated } = useAuth();
     const [isDarkMode, setIsDarkMode] = useState(false);
 
     const handleLogout = async () => {
         await logout();
+        if (!resetToWelcomeOnRoot()) {
+            navigation.navigate('Welcome');
+        }
     };
 
     const handlePress = (id: string) => {
@@ -56,9 +60,9 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps<'Sett
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.floatingButton, { position: 'absolute', top: 45, left: 16, zIndex: 10 }]}>
-                                          <BackIcon color={colors.gray900} />
-                 </TouchableOpacity>
-                <Text style={[styles.headerTitle, {position: 'absolute', top: 45, right: 16 , zIndex: 10}]}>Account Setting</Text>
+                    <BackIcon color={colors.gray900} />
+                </TouchableOpacity>
+                <Text style={[styles.headerTitle, { position: 'absolute', top: 45, right: 16, zIndex: 10 }]}>Account Setting</Text>
                 <View style={{ width: 44 }} />
             </View>
 
@@ -95,10 +99,16 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps<'Sett
                     ))}
                 </View>
 
-                {/* Sign Out Button */}
-                <TouchableOpacity style={styles.signOutBtn} onPress={handleLogout}>
-                    <Text style={styles.signOutText}>Sign out</Text>
-                </TouchableOpacity>
+                {/* Sign Out / Sign In Button */}
+                {isAuthenticated ? (
+                    <TouchableOpacity style={styles.signOutBtn} onPress={handleLogout}>
+                        <Text style={styles.signOutText}>Sign out</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity style={[styles.signOutBtn, { backgroundColor: colors.primary }]} onPress={() => pushLoginOnRoot()}>
+                        <Text style={styles.signOutText}>Sign In</Text>
+                    </TouchableOpacity>
+                )}
 
                 <View style={shared.bottomSpacer} />
             </ScrollView>
@@ -115,16 +125,16 @@ const styles = StyleSheet.create({
         paddingBottom: 16,
         paddingHorizontal: 16,
     },
-     floatingButton: {
-  backgroundColor: '#fff',       // make sure button has background
-  padding: 10,
-  borderRadius: 25,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.3,
-  shadowRadius: 3,
-  elevation: 5,                  // for Android
-},
+    floatingButton: {
+        backgroundColor: '#fff',       // make sure button has background
+        padding: 10,
+        borderRadius: 25,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+        elevation: 5,                  // for Android
+    },
     backButton: {
         width: 44,
         height: 44,

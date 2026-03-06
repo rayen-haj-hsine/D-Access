@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -21,7 +21,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const FORM_WIDTH = Math.min(323, SCREEN_WIDTH - 66);
 
 export default function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
-    const { login, loginWithGoogle, loginWithFacebook, loginWithApple } = useAuth();
+    const { login, loginWithGoogle, loginWithFacebook, loginWithApple, isAuthenticated } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -42,6 +42,7 @@ export default function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
         try {
             setLoading(true);
             await login(email.trim().toLowerCase(), password);
+            navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
         } catch (error: any) {
             const msg = error.response?.data?.message || 'Login failed';
             Alert.alert('Error', Array.isArray(msg) ? msg[0] : msg);
@@ -57,12 +58,14 @@ export default function LoginScreen({ navigation }: RootScreenProps<'Login'>) {
         try {
             setSocialLoading(provider);
             await action();
+            navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
         } catch (error: any) {
             Alert.alert('Error', `${provider} login failed. Please try again.`);
         } finally {
             setSocialLoading(null);
         }
     };
+
 
     return (
         <View style={styles.container}>

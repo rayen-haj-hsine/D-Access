@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import MapView, { Marker, Region, UrlTile } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_NONE, Region, UrlTile } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { authApi, placesApi } from '../../services/api';
 import { colors } from '../../constants/colors';
@@ -156,6 +156,7 @@ export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
   const [errorText, setErrorText] = useState<string | null>(null);
   const [lastErrorDetail, setLastErrorDetail] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
   // Reports will be populated once a reports API is available
   const [reports] = useState<ReportItem[]>([]);
 
@@ -256,9 +257,12 @@ export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
         const { status } = await Location.requestForegroundPermissionsAsync();
 
         if (status !== 'granted') {
+          setLocationPermissionGranted(false);
           await fetchPlaces(FALLBACK_REGION, undefined);
           return;
         }
+
+        setLocationPermissionGranted(true);
 
         const current = await Location.getCurrentPositionAsync({});
         if (!isMounted) {
@@ -422,7 +426,8 @@ export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
           initialRegion={FALLBACK_REGION}
           onRegionChangeComplete={onRegionChangeComplete}
           onPress={() => setSelectedPlaceId(null)}
-          showsUserLocation
+          provider={PROVIDER_NONE}
+          showsUserLocation={locationPermissionGranted}
           showsMyLocationButton={false}
           mapType="none"
         >
@@ -809,7 +814,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FDFDFD',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    marginTop: -24,
+    marginTop: -29,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowRadius: 16,

@@ -1,4 +1,4 @@
-import { Region } from 'react-native-maps';
+import { MapRegion } from '../types/map';
 
 const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000;
 const DEFAULT_CACHE_MAX_ENTRIES = 80;
@@ -11,7 +11,7 @@ type CacheEntry<T> = {
 };
 
 type NearbyPlacesKeyInput = {
-  region: Region;
+  region: MapRegion;
   radiusMeters: number;
   limit: number;
   category?: string;

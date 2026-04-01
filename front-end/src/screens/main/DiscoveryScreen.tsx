@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import { LeafletMap } from '../../components/common/LeafletMap';
 import * as Location from 'expo-location';
+import { NearbyPlace } from '../../types/place';
 import { placesApi } from '../../services/api';
 
 export default function DiscoveryScreen() {
     const [location, setLocation] = useState<Location.LocationObject | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
-    const [places, setPlaces] = useState<any[]>([]);
+    const [places, setPlaces] = useState<NearbyPlace[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -41,28 +42,16 @@ export default function DiscoveryScreen() {
     return (
         <View style={styles.container}>
             {location ? (
-                <MapView
+                <LeafletMap
                     style={styles.map}
-                    initialRegion={{
+                    region={{
                         latitude: location.coords.latitude,
                         longitude: location.coords.longitude,
                         latitudeDelta: 0.0922,
                         longitudeDelta: 0.0421,
                     }}
-                    showsUserLocation={true}
-                >
-                    {places.map((place, index) => (
-                        <Marker
-                            key={place._id || index}
-                            coordinate={{
-                                latitude: place.location.coordinates[1],
-                                longitude: place.location.coordinates[0],
-                            }}
-                            title={place.name}
-                            description={place.description}
-                        />
-                    ))}
-                </MapView>
+                    markers={places}
+                />
             ) : (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color="#0000ff" />

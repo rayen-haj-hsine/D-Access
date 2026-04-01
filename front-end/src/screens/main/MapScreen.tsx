@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_NONE, Region, UrlTile } from 'react-native-maps';
+import type { MapRegion } from '../../types/map';
+import { LeafletMap, LeafletMapRef } from '../../components/common/LeafletMap';
 import * as Location from 'expo-location';
 import { authApi, placesApi } from '../../services/api';
 import { colors } from '../../constants/colors';
@@ -22,7 +23,6 @@ import { TargetPositionIcon } from '../../components/icons/TargetPositionIcon';
 import { MapScreenProps } from '../../types/navigation';
 import { NearbyPlace, WheelchairAccessibility } from '../../types/place';
 import { SearchIcon } from '../../components/icons/searchIcon';
-import { MapPlacePin } from '../../components/common/MapPlacePin';
 import {
   createNearbyPlacesCacheKey,
   getCachedNearbyPlaces,
@@ -47,7 +47,7 @@ const CHIP_TO_CATEGORY: Record<string, string | undefined> = {
   Parking: 'parking',
 };
 
-const FALLBACK_REGION: Region = {
+const FALLBACK_REGION: MapRegion = {
   latitude: 35.4162835,
   longitude: 10.9987172,
   latitudeDelta: 0.04,
@@ -87,66 +87,6 @@ type FetchPlacesOptions = {
   showLoader?: boolean;
 };
 
-type PlaceMarkerProps = {
-  place: NearbyPlace;
-  wheelchair: WheelchairAccessibility;
-  isSelected: boolean;
-  onMarkerPress: (place: NearbyPlace) => void;
-};
-
-const PlaceMarker = React.memo(
-  function PlaceMarker({
-    place,
-    wheelchair,
-    isSelected,
-    onMarkerPress,
-  }: PlaceMarkerProps) {
-    const [lng, lat] = place.location.coordinates;
-    const [trackViewChanges, setTrackViewChanges] = useState(true);
-
-    useEffect(() => {
-      const initialTimer = setTimeout(() => {
-        setTrackViewChanges(false);
-      }, 160);
-
-      return () => {
-        clearTimeout(initialTimer);
-      };
-    }, []);
-
-    useEffect(() => {
-      setTrackViewChanges(true);
-      const timer = setTimeout(() => {
-        setTrackViewChanges(false);
-      }, 120);
-
-      return () => {
-        clearTimeout(timer);
-      };
-    }, [isSelected, place.category, wheelchair]);
-
-    return (
-      <Marker
-        coordinate={{ latitude: lat, longitude: lng }}
-        anchor={{ x: 0.5, y: 1 }}
-        tracksViewChanges={trackViewChanges}
-        onPress={() => onMarkerPress(place)}
-      >
-        <MapPlacePin
-          wheelchair={wheelchair}
-          category={place.category}
-          isSelected={isSelected}
-        />
-      </Marker>
-    );
-  },
-  (prev, next) =>
-    prev.place.sourceId === next.place.sourceId &&
-    prev.isSelected === next.isSelected &&
-    prev.wheelchair === next.wheelchair &&
-    prev.place.category === next.place.category &&
-    prev.onMarkerPress === next.onMarkerPress,
-);
 
 export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
   const [activeFilter, setActiveFilter] = useState('All');
@@ -160,13 +100,13 @@ export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
   // Reports will be populated once a reports API is available
   const [reports] = useState<ReportItem[]>([]);
 
-  const mapRef = useRef<MapView | null>(null);
+  const mapRef = useRef<LeafletMapRef | null>(null);
   const fetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastRegionRef = useRef<Region>(FALLBACK_REGION);
-  const currentRegionRef = useRef<Region>(FALLBACK_REGION);
+  const lastRegionRef = useRef<MapRegion>(FALLBACK_REGION);
+  const currentRegionRef = useRef<MapRegion>(FALLBACK_REGION);
   const fetchSequenceRef = useRef(0);
 
-  const hasMeaningfulRegionChange = (nextRegion: Region) => {
+  const hasMeaningfulRegionChange = (nextRegion: MapRegion) => {
     const previous = lastRegionRef.current;
     const latDelta = Math.abs(previous.latitude - nextRegion.latitude);
     const lonDelta = Math.abs(previous.longitude - nextRegion.longitude);
@@ -176,7 +116,7 @@ export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
 
   const fetchPlaces = useCallback(
     async (
-      region: Region,
+      region: MapRegion,
       category?: string,
       options: FetchPlacesOptions = { showLoader: true },
     ) => {
@@ -269,7 +209,7 @@ export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
           return;
         }
 
-        const nextRegion: Region = {
+        const nextRegion: MapRegion = {
           latitude: current.coords.latitude,
           longitude: current.coords.longitude,
           latitudeDelta: 0.04,
@@ -302,7 +242,7 @@ export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
     void fetchPlaces(currentRegionRef.current, category, { showLoader: true });
   }, [activeFilter, fetchPlaces]);
 
-  const onRegionChangeComplete = (region: Region) => {
+  const onRegionChangeComplete = (region: MapRegion) => {
     if (!hasMeaningfulRegionChange(region)) {
       return;
     }
@@ -323,7 +263,7 @@ export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
   const centerOnUserOrFallback = async () => {
     try {
       const current = await Location.getCurrentPositionAsync({});
-      const nextRegion: Region = {
+      const nextRegion: MapRegion = {
         latitude: current.coords.latitude,
         longitude: current.coords.longitude,
         latitudeDelta: 0.04,
@@ -357,25 +297,13 @@ export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
   }, [places, searchQuery]);
 
   const zoomIn = () => {
-    mapRef.current?.animateToRegion(
-      {
-        ...lastRegionRef.current,
-        latitudeDelta: lastRegionRef.current.latitudeDelta * 0.5,
-        longitudeDelta: lastRegionRef.current.longitudeDelta * 0.5,
-      },
-      200,
-    );
+    console.log('[MapScreen] Zoom In pressed, mapRef exists:', !!mapRef.current);
+    mapRef.current?.zoomIn();
   };
 
   const zoomOut = () => {
-    mapRef.current?.animateToRegion(
-      {
-        ...lastRegionRef.current,
-        latitudeDelta: lastRegionRef.current.latitudeDelta * 2,
-        longitudeDelta: lastRegionRef.current.longitudeDelta * 2,
-      },
-      200,
-    );
+    console.log('[MapScreen] Zoom Out pressed, mapRef exists:', !!mapRef.current);
+    mapRef.current?.zoomOut();
   };
 
   const resolveWheelchair = useCallback(
@@ -420,30 +348,17 @@ export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
 
       {/* ── MAP ── */}
       <View style={styles.mapContainer}>
-        <MapView
+        <LeafletMap
           ref={mapRef}
           style={styles.map}
-          initialRegion={FALLBACK_REGION}
+          region={lastRegionRef.current}
+          markers={filteredPlaces}
           onRegionChangeComplete={onRegionChangeComplete}
           onPress={() => setSelectedPlaceId(null)}
-          provider={PROVIDER_NONE}
-          showsUserLocation={locationPermissionGranted}
-          showsMyLocationButton={false}
-          mapType="none"
-        >
-          <UrlTile urlTemplate={TILE_URL_TEMPLATE} maximumZ={19} flipY={false} />
-          {filteredPlaces.map((place) => {
-            return (
-              <PlaceMarker
-                key={place.sourceId}
-                place={place}
-                wheelchair={resolveWheelchair(place)}
-                isSelected={selectedPlaceId === place.sourceId}
-                onMarkerPress={handleMarkerPress}
-              />
-            );
-          })}
-        </MapView>
+          showUserLocation={locationPermissionGranted}
+          onMarkerPress={handleMarkerPress}
+          selectedPlaceId={selectedPlaceId}
+        />
 
         {/* Back */}
         <TouchableOpacity
@@ -512,7 +427,7 @@ export default function MapScreen({ navigation }: MapScreenProps<'MapMain'>) {
         {/* Search row */}
         <View style={styles.searchRow}>
           <View style={styles.searchBox}>
-            <SearchIcon color={colors.gray500}  />
+            <SearchIcon color={colors.gray500} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search"
